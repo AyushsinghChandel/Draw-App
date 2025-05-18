@@ -17,8 +17,11 @@ wss.on('connection', function connection(ws, request){
         throw new Error("JWT_SECRET is not defined");
     }
     const decoded = jwt.verify(token, JWT_SECRET);
-
-    if(!decoded || !(decoded as JwtPayload ).userId){
+    
+    if(typeof decoded == "string"){
+        return;
+    }
+    if(!decoded || !decoded.userId){
         ws.close();
         return;
     }
