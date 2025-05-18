@@ -1,0 +1,28 @@
+import { WebSocketServer } from "ws";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config({ path: "../../.env" });
+const JWT_SECRET = process.env.JWT_SECRET;
+const wss = new WebSocketServer({port:8080});
+
+wss.on('connection', function connection(ws, request){
+    const url = request.url;
+    if(!url){
+        return;
+    }
+    const queryparams = new URLSearchParams(url.split('?')[1]);
+    const token = queryparams.get('token') ?? "";
+    if(!JWT_SECRET){
+        throw new Error("JWT_SECRET is not defined");
+    }
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    if(!decoded || !(decoded as JwtPayload ).userId){
+        ws.close();
+        return;
+    }
+    ws.on('message', function message(data){
+        ws.send('PONG');
+    });
+});
